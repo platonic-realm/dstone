@@ -1,0 +1,27 @@
+---
+- name: Create the user
+  user:
+    name: "{{ user_name }}"
+    groups: root
+    shell: /bin/bash
+  become: true
+  when: create_user | default(true)
+
+- name: Add ssh key for the user
+  authorized_key:
+    user: "{{ user_name }}"
+    key: "{{ ssh_public_key }}"
+  become: true
+  when: create_user | default(true)
+
+- name: Ensure sudoers file for the user exists with the correct content
+  become: true
+  lineinfile:
+    dest: "/etc/sudoers.d/{{ user_name }}"
+    create: yes
+    state: present
+    owner: root
+    group: root
+    mode: '0440'
+    line: "{{ user_name }} ALL=(ALL) NOPASSWD: ALL"
+  when: create_user | default(true)

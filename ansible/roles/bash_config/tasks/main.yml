@@ -1,0 +1,9 @@
+---
+- name: Configure Bash
+  become_user: "{{ user_name }}"
+  copy:
+    src: bashrc
+    dest: ~/.bashrc
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: 0644

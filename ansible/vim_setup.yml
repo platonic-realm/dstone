@@ -1,0 +1,10 @@
+---
+- name: Vim Environment Setup
+  hosts: all
+  become: false
+  vars:
+    user_name: "{{ ansible_user_id }}"
+  roles:
+    - bash_config
+    - tmux_config
+    - neovim_config

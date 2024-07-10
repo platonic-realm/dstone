@@ -1,0 +1,4 @@
+---
+user_name: afatehi
+ssh_public_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHb1LK2m45xrjO07Z9WKKPK6m4y9CPZINNdLN+gb6Jm0 arash@Wall-E"
+ansible_ssh_common_args: '-o StrictHostKeyChecking=no'

@@ -1,0 +1,29 @@
+---
+- name: Install base packages
+  become: true
+  package:
+    name:
+      - sudo
+      - git
+      - htop
+      - fzf
+      - tldr
+      - neofetch
+      - thefuck
+      - net-tools
+      - iftop
+      - iotop
+      - sysstat
+      - build-essential
+      - ninja-build
+      - autoconf
+      - automake
+      - autojump
+      - mc
+      - jq
+      - wget
+      - luarocks
+      - tmux
+      - neovim
+    state: present
+

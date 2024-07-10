@@ -1,0 +1,9 @@
+---
+- name: Add Neovim config files
+  become_user: "{{ user_name }}"
+  copy:
+    src: nvim
+    dest: ~/.config/
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: 0644

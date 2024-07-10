@@ -1,0 +1,16 @@
+---
+- name: Clone tpm
+  become_user: "{{ user_name }}"
+  git:
+    repo: https://github.com/tmux-plugins/tpm
+    dest: ~/.config/tmux/plugins/tpm
+    update: no
+
+- name: Add tmux config file
+  become_user: "{{ user_name }}"
+  copy:
+    src: tmux.conf
+    dest: ~/.config/tmux/
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: 0644

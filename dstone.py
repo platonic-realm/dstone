@@ -32,6 +32,7 @@ collapse = html.Div(
 
 app.layout = collapse
 
+
 @app.callback(
     Output("horizontal-collapse", "is_open"),
     [Input("horizontal-collapse-button", "n_clicks")],

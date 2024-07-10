@@ -1,0 +1,10 @@
+---
+- name: Full Environment Setup
+  hosts: all
+  become: true
+  roles:
+    - base_packages
+    - user_management
+    - bash_config
+    - tmux_config
+    - neovim_config
