@@ -1,48 +1,66 @@
+import dash
 import dash_bootstrap_components as dbc
-from dash import Dash, Input, Output, State, html
+from dash import html
 
-app = Dash(external_stylesheets=[dbc.themes.SLATE])
+app = dash.Dash(
+    __name__,
+    suppress_callback_exceptions=True,
+    external_stylesheets=[dbc.themes.CYBORG, dbc.icons.FONT_AWESOME],
+)
 
-collapse = html.Div(
+
+sidebar = html.Div(
     [
-        dbc.Button(
-            "DS",
-            id="horizontal-collapse-button",
-            className="mb-3",
-            color="secondary",
-            n_clicks=0,
-        ),
         html.Div(
-            dbc.Collapse(
-                dbc.Card(
-                    dbc.CardBody(
-                        "This content appeared horizontally due to the "
-                        "`dimension` attribute"
-                    ),
-                    style={"width": "400px"},
+            [
+                html.Img(src=app.get_asset_url("logo.png"), alt="logo", width="80%",),
+            ],
+            className="sidebar-header",
+        ),
+        html.Hr(),
+        dbc.Nav(
+            [
+                dbc.NavLink(
+                    [html.I(className="fas fa-home me-2"), html.Span("Dashboard")],
+                    href="/",
+                    active="exact",
                 ),
-                id="horizontal-collapse",
-                is_open=False,
-                dimension="width",
-            ),
-            style={"minHeight": "100px"},
+                dbc.NavLink(
+                    [
+                        html.I(className="fas fa-calendar-alt me-2"),
+                        html.Span("Projects"),
+                    ],
+                    href="/projects",
+                    active="exact",
+                ),
+                dbc.NavLink(
+                    [
+                        html.I(className="fas fa-envelope-open-text me-2"),
+                        html.Span("Datasets"),
+                    ],
+                    href="/datasets",
+                    active="exact",
+                ),
+            ],
+            vertical=True,
+            pills=True,
+        ),
+    ],
+    className="sidebar",
+)
+
+app.layout = html.Div(
+    [
+        sidebar,
+        html.Div(
+            [
+                dash.page_container
+            ],
+            className="content",
         ),
     ]
 )
 
-app.layout = collapse
+if __name__ == "__main__":
+    app.run_server(debug=True)
 
-
-@app.callback(
-    Output("horizontal-collapse", "is_open"),
-    [Input("horizontal-collapse-button", "n_clicks")],
-    [State("horizontal-collapse", "is_open")],
-)
-def toggle_collapse(n, is_open):
-    if n:
-        return not is_open
-    return is_open
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
