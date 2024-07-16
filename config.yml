@@ -1,0 +1,21 @@
+# Application Configuration
+
+# Logging configuration
+logging:
+  level: INFO
+  file: dstone.log
+  stdout: true
+
+# DStone configuration
+dstone:
+  debug: true
+  reload: false
+  port: 8000
+
+# Database configuration (if needed in the future)
+# database:
+#  host: localhost
+#  port: 5432
+#  name: dstone_db
+#  user: dstone_user
+#  password: password  # Consider using environment variables for sensitive data

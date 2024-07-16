@@ -14,7 +14,7 @@ Key Features:
 
 Usage:
 1. Configure the main application logger:
-   main_logger = get_main_logger('INFO', 'app.log', log_to_stdout=True)
+   main_logger = configure_main_logger('INFO', 'app.log', log_to_stdout=True)
 
 2. Create loggers for plugins:
    plugin_logger = get_plugin_logger('MyPlugin', 'plugin.log')
@@ -38,12 +38,12 @@ import sys
 from typing import Optional, List
 
 
-def get_main_logger(
+def configure_main_logger(
     log_level: str,
     log_file: Optional[str] = None,
     log_to_stdout: bool = True,
     additional_handlers: List[logging.Handler] = None
-) -> logging.Logger:
+) -> None:
     """
     Configure and get the main logger for the application.
 
@@ -102,8 +102,6 @@ def get_main_logger(
     # Log the configured log level
     logger.info(f"Main logger configured with level: {log_level}")
 
-    return logger
-
 
 def get_plugin_logger(plugin_name: str, log_file: Optional[str] = None) -> logging.Logger:
     """
@@ -130,12 +128,3 @@ def get_plugin_logger(plugin_name: str, log_file: Optional[str] = None) -> loggi
     logger.info(f"Plugin logger configured for: {plugin_name}")
 
     return logger
-
-# Example usage:
-# if __name__ == "__main__":
-#     main_logger = get_main_logger('INFO', 'app.log', log_to_stdout=True)
-#     plugin_logger = get_plugin_logger('MyPlugin', 'plugin.log')
-#
-#     main_logger.info("This is a main application log")
-#     plugin_logger.info("This is a plugin log")
-

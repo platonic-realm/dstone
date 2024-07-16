@@ -6,41 +6,46 @@ This script initializes the DStone instance and runs the application.
 
 # Python Imports
 import sys
+import yaml
+import logging
+from pathlib import Path
 
 # Local Imports
-from src.dstone import DStone, DependencyError
-from src.api.utils.logging import get_main_logger
-from src.api.io.fs import get_project_root, create_directory
+from src import factory
+from src.core.exceptions import DependencyError
+from src.api.utils.logging import configure_main_logger
+from src.api.io.fs import get_project_root
 
 
-def main(debug: bool, reload: bool):
-    # Basic configuratoins
-    logger = get_main_logger('INFO')
+def dstone_main(configs: dict, dstone_root: Path):
 
-    root_dir = get_project_root()
-    plugins_dir = root_dir / 'src' / 'plugins'
-    create_directory(plugins_dir)
+    logger = logging.getLogger(__name__)
 
-    # Create a DStone instance (which will discover plugins during initialization)
-    logger.info("Initializing DStone and discovering plugins...")
-    dstone = DStone(str(plugins_dir))
+    dstone = factory.create_dstone_instance(configs, dstone_root)
 
-    logger.info("Discovered plugins:")
-    for plugin_name, plugin in dstone.plugins.items():
-        logger.info(f"- {plugin_name} (v{plugin.version}): {plugin.description}")
-
-    # Attempt to load and run the application
-    try:
-        logger.info("Starting the application...")
-        dstone.run(debug=debug, reload=reload)
-    except DependencyError as e:
-        logger.info(f"Dependency Error: {e}")
-        sys.exit(1)
-    except Exception as e:
-        logger.info(f"An unexpected error occurred: {e}")
-        sys.exit(1)
+    logger.info("Starting the application.")
+    dstone.run(debug=configs['dstone']['debug'],
+               reload=configs['dstone']['reload'])
 
 
 if __name__ == "__main__":
-    # TODO: Implement a config manager and pass it to main to configure the app
-    main(debug=True, reload=False)
+
+    configure_main_logger('INFO')
+    logger = logging.getLogger(__name__)
+
+    # Load dstone configuratoins
+    dstone_root = get_project_root()
+    config_path = dstone_root / 'config.yml'
+    with open(config_path, 'r') as config_file:
+        configs = yaml.safe_load(config_file)
+
+    try:
+        dstone_main(configs, dstone_root)
+
+    except DependencyError as e:
+        logger.error(f"Dependency Error: {e}")
+        sys.exit(1)
+
+    except Exception as e:
+        logger.error(f"An unexpected error occurred: {e}")
+        sys.exit(1)

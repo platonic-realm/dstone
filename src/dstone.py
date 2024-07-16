@@ -30,7 +30,7 @@ class DStone:
     the basic UI structure using Dash.
     """
 
-    def __init__(self, plugins_dir):
+    def __init__(self, plugins_dir, assets_dir):
         self.plugins: Dict[str, BasePlugin] = {}
         self.discover_plugins(plugins_dir)
 
@@ -39,6 +39,7 @@ class DStone:
             suppress_callback_exceptions=True,
             external_stylesheets=[dbc.themes.CYBORG, dbc.icons.FONT_AWESOME],
             add_log_handler=False,
+            assets_folder=assets_dir,
         )
 
         self.setup_ui()
