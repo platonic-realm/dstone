@@ -2,7 +2,7 @@
 DStone Module
 =============
 
-This module defines the DStone class, which is responsible for advanced plugin management
+This module defines the DStone class, which is responsible for plugin management
 and providing the basic UI framework using Dash.
 """
 
@@ -18,27 +18,8 @@ import dash_bootstrap_components as dbc
 from dash import html
 
 # Local Imports
-from .base_plugin import BasePlugin  # Assuming BasePlugin is in the same package
-
-
-class DependencyError(Exception):
-    """
-    Exception raised for errors in the plugin dependency system.
-
-    Attributes:
-        plugin (str): Name of the plugin with the dependency issue.
-        dependency (str): Name of the dependency causing the issue.
-        message (str): Explanation of the error.
-    """
-
-    def __init__(self, plugin: str, dependency: str, message: str):
-        self.plugin = plugin
-        self.dependency = dependency
-        self.message = message
-        super().__init__(self.message)
-
-    def __str__(self):
-        return f"DependencyError for plugin '{self.plugin}': {self.message} (Dependency: '{self.dependency}')"
+from src.core.base_plugin import BasePlugin
+from src.core.exceptions import DependencyError
 
 
 class DStone:
@@ -49,13 +30,17 @@ class DStone:
     the basic UI structure using Dash.
     """
 
-    def __init__(self):
+    def __init__(self, plugins_dir):
         self.plugins: Dict[str, BasePlugin] = {}
+        self.discover_plugins(plugins_dir)
+
         self.app = dash.Dash(
             __name__,
             suppress_callback_exceptions=True,
             external_stylesheets=[dbc.themes.CYBORG, dbc.icons.FONT_AWESOME],
+            add_log_handler=False,
         )
+
         self.setup_ui()
 
     def discover_plugins(self, plugin_dir: str) -> None:
@@ -206,17 +191,21 @@ class DStone:
             ]
         )
 
-    def run(self, debug: bool = False, port: int = 8050) -> None:
+    def run(self,
+            debug: bool = False,
+            port: int = 8050,
+            reload: bool = False) -> None:
         """
         Run the DStone application.
 
         Args:
             debug (bool): Whether to run in debug mode.
             port (int): The port to run the application on.
+            reload (bool): Whether enable hot reloading.
         """
         self.load_all_plugins()
         self.execute_plugins()
-        self.app.run_server(debug=debug, port=port)
+        self.app.run_server(debug=debug, port=port, use_reloader=reload)
 
     # Session management methods
     def get_session_data(self, plugin_name: str) -> Dict[str, Any]:

@@ -2,7 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../src'))
 
-project = 'Deepstone'
+project = 'dstone'
 author = 'Arash Fatehi'
 
 extensions = [
