@@ -4,8 +4,11 @@ Main entry point for the DStone application.
 This script initializes the DStone instance and runs the application.
 """
 
-# Python Imports
+# Change the caching directory
 import sys
+sys.pycache_prefix = "/tmp/dstone/"
+
+# Python Imports
 import yaml
 import logging
 from pathlib import Path

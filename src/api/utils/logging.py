@@ -125,6 +125,6 @@ def get_plugin_logger(plugin_name: str, log_file: Optional[str] = None) -> loggi
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
 
-    logger.info(f"Plugin logger configured for: {plugin_name}")
+    logger.info("Plugin logger configured")
 
     return logger

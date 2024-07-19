@@ -3,60 +3,84 @@ Base Plugin Module
 ==================
 
 This module defines the BasePlugin class, which serves as a foundation for creating plugins
-in a plugin system where the core API handles session management.
+in the DStone application. It provides a streamlined interface for plugin development.
 """
 
+# Python Imports
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Callable
+
+# Local Imports
+from src.api.utils.logging import get_plugin_logger
 
 
 @dataclass
 class BasePlugin(ABC):
     """
-    A base class for plugins in a plugin system with core API session management.
+    A base class for plugins in the DStone application.
 
     This class provides a foundation for creating plugins with common attributes and methods.
-    It uses the dataclass decorator for automatic generation of __init__, __repr__, and __eq__ methods.
+    It uses the dataclass decorator for automatic generation of __repr__ and __eq__ methods.
 
     Attributes:
         name (str): The name of the plugin.
         version (str): The version of the plugin.
         description (str): A brief description of the plugin's purpose and functionality.
+        app (Any): The application object providing core functionalities.
         aliases (List[str]): Alternative names for the plugin.
         priority (int): The priority of the plugin in the system.
         dependencies (List[str]): Names of other plugins this plugin depends on.
         sessionable (bool): Whether the plugin can maintain session state.
         initialized (bool): Whether the plugin has been initialized.
-        app: The application object providing core functionalities.
     """
 
     name: str
     version: str
     description: str
+    app: Any
     aliases: List[str] = field(default_factory=list)
     priority: int = 0
     dependencies: List[str] = field(default_factory=list)
     sessionable: bool = False
     initialized: bool = False
-    app: Any = field(default=None)
 
-    @abstractmethod
-    def initialize(self, config: Dict[str, Any]) -> None:
+    def __init__(self,
+                 name: str,
+                 version: str,
+                 description: str,
+                 app: Any,
+                 aliases: List[str] = None,
+                 priority: int = 0,
+                 dependencies: List[str] = None,
+                 sessionable: bool = False):
         """
-        Initialize the plugin with the given configuration.
+        Initialize the plugin.
 
         Args:
-            config (Dict[str, Any]): Configuration dictionary for the plugin.
+            name (str): The name of the plugin.
+            version (str): The version of the plugin.
+            description (str): A brief description of the plugin's purpose.
+            app (Any): The main application object, providing access to shared resources.
+            aliases (List[str], optional): Alternative names for the plugin.
+            priority (int, optional): The priority of the plugin in the system.
+            dependencies (List[str], optional): Names of other plugins this plugin depends on.
+            sessionable (bool, optional): Whether the plugin can maintain session state.
         """
-        pass
+        self.name = name
+        self.version = version
+        self.description = description
+        self.app = app
+        self.aliases = aliases or []
+        self.priority = priority
+        self.dependencies = dependencies or []
+        self.sessionable = sessionable
+        self.logger = get_plugin_logger(self.name)
 
     @abstractmethod
     def execute(self, *args: Any, **kwargs: Any) -> Any:
         """
         Execute the main functionality of the plugin.
-
-        The session data, if needed, should be accessed through the app object.
 
         Args:
             *args: Variable length argument list.
@@ -68,11 +92,30 @@ class BasePlugin(ABC):
         pass
 
     @abstractmethod
-    def cleanup(self) -> None:
+    def setup_ui(self) -> None:
         """
-        Perform any necessary cleanup operations.
+        Set up the user interface for the plugin.
+        This method should be implemented by subclasses to create any UI components.
         """
         pass
+
+    def attach(self, on_attach: Callable[[], None]) -> None:
+        """
+        Attach the plugin to the application.
+
+        Args:
+            on_attach (Callable[[], None]): Callback function to be called when the plugin is attached.
+        """
+        on_attach()
+
+    def detach(self, on_detach: Callable[[], None]) -> None:
+        """
+        Detach the plugin from the application.
+
+        Args:
+            on_detach (Callable[[], None]): Callback function to be called when the plugin is detached.
+        """
+        on_detach()
 
     def get_info(self) -> Dict[str, Any]:
         """
@@ -93,16 +136,6 @@ class BasePlugin(ABC):
         }
 
     @abstractmethod
-    def get_capabilities(self) -> List[str]:
-        """
-        Return a list of capabilities supported by the plugin.
-
-        Returns:
-            List[str]: A list of capability strings.
-        """
-        pass
-
-    @abstractmethod
     def validate_config(self, config: Dict[str, Any]) -> bool:
         """
         Validate the configuration for the plugin.
@@ -114,31 +147,6 @@ class BasePlugin(ABC):
             bool: True if the configuration is valid, False otherwise.
         """
         pass
-
-    def __enter__(self):
-        """
-        Enter the runtime context for the plugin.
-
-        Raises:
-            RuntimeError: If the plugin is not initialized.
-
-        Returns:
-            BasePlugin: The plugin instance.
-        """
-        if not self.initialized:
-            raise RuntimeError("Plugin must be initialized before use.")
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """
-        Exit the runtime context for the plugin.
-
-        Args:
-            exc_type: The exception type, if any.
-            exc_val: The exception value, if any.
-            exc_tb: The exception traceback, if any.
-        """
-        self.cleanup()
 
     @classmethod
     def create(cls,
@@ -171,11 +179,11 @@ class BasePlugin(ABC):
         plugin = cls(name,
                      version,
                      description,
-                     aliases,
+                     app, aliases,
                      priority,
                      dependencies,
-                     sessionable,
-                     app=app)
-        if config:
-            plugin.initialize(config)
+                     sessionable)
+        if config and plugin.validate_config(config):
+            # Apply configuration if provided and valid
+            pass  # TODO: Apply configuration
         return plugin

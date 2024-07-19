@@ -10,6 +10,8 @@ and providing the basic UI framework using Dash.
 import os
 import importlib
 import inspect
+import logging
+from pathlib import Path
 from typing import Dict, Any
 
 # Library Imports
@@ -20,6 +22,8 @@ from dash import html
 # Local Imports
 from src.core.base_plugin import BasePlugin
 from src.core.exceptions import DependencyError
+from src.core.system_info import SystemInfo
+from src.api.io.fs import list_directories
 
 
 class DStone:
@@ -31,6 +35,33 @@ class DStone:
     """
 
     def __init__(self, plugins_dir, assets_dir):
+        """
+        Initialize the DStone application.
+
+        This method sets up the core components of the DStone application, including
+        plugin discovery and the Dash web application.
+
+        Args:
+            plugins_dir (str): The directory path where plugins are located.
+                               This directory will be scanned for plugin files.
+            assets_dir (str): The directory path for static assets (like CSS, images)
+                              that will be served by the Dash application.
+
+        The initialization process includes:
+        1. Discovering plugins from the specified directory.
+        2. Setting up the Dash application with specific configurations.
+        3. Initializing the user interface.
+
+        Note:
+            - The Dash application is configured to suppress callback exceptions,
+              which is useful during development with dynamic callbacks.
+            - Logging for Dash is disabled (add_log_handler=False) to allow custom logging configuration.
+        """
+
+        # Get logger for this module
+        self.logger = logging.getLogger(__name__)
+
+        self.system_info = SystemInfo()
         self.plugins: Dict[str, BasePlugin] = {}
         self.discover_plugins(plugins_dir)
 
@@ -51,15 +82,28 @@ class DStone:
         Args:
             plugin_dir (str): The directory to search for plugins.
         """
-        for filename in os.listdir(plugin_dir):
-            if filename.endswith('.py') and not filename.startswith('__'):
-                module_name = filename[:-3]
-                module = importlib.import_module(f'plugins.{module_name}')
-                for name, obj in inspect.getmembers(module):
-                    if inspect.isclass(obj) and issubclass(obj, BasePlugin) and obj != BasePlugin:
-                        self.register_plugin(obj)
 
-    def register_plugin(self, plugin_class: type) -> None:
+        self.logger.info(f"Discovering plugins in: '{plugin_dir}'")
+
+        for dirname in list_directories(plugin_dir):
+
+            dirpath = Path(plugin_dir) / dirname
+            initfile = dirpath / '__init__.py'
+            self.logger.info(f"Checking plugin: '{dirname}' in: '{str(dirpath)}'")
+
+            if os.path.exists(initfile):
+                # TODO: Unify naming of Module, Filename and Plugin itself.
+                module_name = f"src.plugins.{dirname}"
+                module = importlib.import_module(module_name)
+                if hasattr(module, 'plugin_class'):
+                    plugin_class = getattr(module, 'plugin_class')
+                    if issubclass(plugin_class, BasePlugin):
+                        self.register_plugin(module_name, plugin_class)
+                        self.logger.info(f"Plugin: '{dirname}' registered.")
+                else:
+                    self.logger.warning(f"Plugin '{dirname}' does not define 'plugin_class' in __init__.py")
+
+    def register_plugin(self, plugin_name: str, plugin_class: type) -> None:
         """
         Register a plugin with DStone.
 
@@ -67,7 +111,7 @@ class DStone:
             plugin_class (type): The class of the plugin to register.
         """
         plugin_instance = plugin_class.create(
-            name=plugin_class.__name__,
+            name=plugin_name,
             version=getattr(plugin_class, 'version', '0.1'),
             description=getattr(plugin_class, 'description', 'No description provided'),
             app=self
@@ -97,7 +141,6 @@ class DStone:
             if not self.plugins[dependency].initialized:
                 self.load_plugin(dependency)  # Recursively load dependencies
 
-        plugin.initialize({})  # You might want to pass actual config here
         plugin.initialized = True
 
     def load_all_plugins(self) -> None:

@@ -13,11 +13,11 @@ class DependencyError(Exception):
         message (str): Explanation of the error.
     """
 
-    def __init__(self, plugin: str, dependency: str, message: str):
+    def __init__(self, plugin: str, dependency: str):
         self.plugin = plugin
         self.dependency = dependency
-        self.message = message
+        self.message = f"DependencyError for plugin: '{self.plugin}' - Dependency: '{self.dependency}')"
         super().__init__(self.message)
 
     def __str__(self):
-        return f"DependencyError for plugin '{self.plugin}': {self.message} (Dependency: '{self.dependency}')"
+        return self.message
